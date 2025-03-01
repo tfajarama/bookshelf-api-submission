@@ -5,6 +5,7 @@ const books = require('./bookshelf.js');
 const addBookHandler = (request, h) => {
   const { name, year, author, summary, publisher, pageCount, readPage, reading } = request.payload;
 
+  // request header validation
   if (name === undefined) {
     const response = h.response({
       status: 'fail',
@@ -22,6 +23,7 @@ const addBookHandler = (request, h) => {
     return response;
   }
 
+  // if request header is valid, create new book object
   const id = nanoid(16);
   const finished = pageCount === readPage;
   const insertedAt = new Date().toISOString();
@@ -35,6 +37,7 @@ const addBookHandler = (request, h) => {
 
   const book = books.find((book) => book.id === id);
 
+  // if book object is created, return success response
   if (book !== undefined) {
     const response = h.response({
       status: 'success',
@@ -46,6 +49,8 @@ const addBookHandler = (request, h) => {
     response.code(201);
     return response;
   }
+
+  // if book object is not created, return error response
   const response = h.response({
     status: 'error',
     message: 'Buku gagal ditambahkan',
@@ -55,8 +60,24 @@ const addBookHandler = (request, h) => {
 };
 
 
-const getAllBooksHandler = () => {
-  const attributes = books.map((book) => ({
+const getAllBooksHandler = (request) => {
+  const params = request.query;
+  const { name, reading, finished } = params;
+  let filteredBooks = books;
+
+  // filter books based on query parameters
+  if (name !== undefined) {
+    filteredBooks = filteredBooks.filter((book) => book.name.toLowerCase().includes(name.toLowerCase()));
+  }
+  if (reading !== undefined) {
+    filteredBooks = filteredBooks.filter((book) => book.reading === !!parseInt(reading));
+  }
+  if (finished !== undefined) {
+    filteredBooks = filteredBooks.filter((book) => book.finished === !!parseInt(finished));
+  }
+
+  // map books to only include id, name, and publisher attributes
+  const attributes = filteredBooks.map((book) => ({
     id: book.id,
     name: book.name,
     publisher: book.publisher,
@@ -75,6 +96,7 @@ const getBookByIdHandler = (request, h) => {
   const { bookId } = request.params;
   const book = books.find((book) => book.id === bookId);
 
+  // if book object is found, return the book object
   if (book !== undefined) {
     return {
       status: 'success',
@@ -84,6 +106,7 @@ const getBookByIdHandler = (request, h) => {
     };
   }
 
+  // if book object is not found, return error response
   const response = h.response({
     status: 'fail',
     message: 'Buku tidak ditemukan',
@@ -96,29 +119,31 @@ const getBookByIdHandler = (request, h) => {
 const editBookByIdHandler = (request, h) => {
   const { bookId } = request.params;
   const { name, year, author, summary, publisher, pageCount, readPage, reading } = request.payload;
+
+  // request header validation
+  if (name === undefined) {
+    const response = h.response({
+      status: 'fail',
+      message: 'Gagal memperbarui buku. Mohon isi nama buku',
+    });
+    response.code(400);
+    return response;
+  }
+  if (readPage > pageCount) {
+    const response = h.response({
+      status: 'fail',
+      message: 'Gagal memperbarui buku. readPage tidak boleh lebih besar dari pageCount',
+    });
+    response.code(400);
+    return response;
+  }
+
   const updatedAt = new Date().toISOString();
   const finished = pageCount === readPage;
-
   const index = books.findIndex((book) => book.id === bookId);
 
+  // if request header is valid & book id is found, update the book object
   if (index !== -1) {
-    if (name === undefined) {
-      const response = h.response({
-        status: 'fail',
-        message: 'Gagal memperbarui buku. Mohon isi nama buku',
-      });
-      response.code(400);
-      return response;
-    }
-    if (readPage > pageCount) {
-      const response = h.response({
-        status: 'fail',
-        message: 'Gagal memperbarui buku. readPage tidak boleh lebih besar dari pageCount',
-      });
-      response.code(400);
-      return response;
-    }
-
     books[index] = {
       ...books[index],
       name,
@@ -141,6 +166,7 @@ const editBookByIdHandler = (request, h) => {
     return response;
   }
 
+  // if book id is not found, return error response
   const response = h.response({
     status: 'fail',
     message: 'Gagal memperbarui buku. Id tidak ditemukan',
