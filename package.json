@@ -1,7 +1,7 @@
 {
   "name": "bookshelf-api-submission",
   "version": "1.0.0",
-  "description": "Submission for Dicoding course (https://www.dicoding.com/academies/261-belajar-back-end-pemula-dengan-javascript)",
+  "description": "Submission for Dicoding course (https://www.dicoding.com/academies/261-belajar-back-end-pemula-dengan-javascript && https://www.dicoding.com/academies/342-belajar-membuat-aplikasi-back-end-untuk-pemula-dengan-google-cloud)",
   "main": "index.js",
   "scripts": {
     "start": "node ./src/server.js",
